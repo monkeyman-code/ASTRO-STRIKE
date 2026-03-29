@@ -2,305 +2,355 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AstroStrike :: Elite Horizon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AstroStrike :: Multi-Rank Terminal</title>
     <style>
         :root { 
-            --blue: #00d4ff; 
-            --red: #ff2a6d; 
-            --gold: #f5ed4d; 
-            --bg: #020205;
+            --blue: #00d4ff; --red: #ff2a6d; --gold: #f5ed4d; --bg: #020205;
             --glass: rgba(255, 255, 255, 0.1);
         }
 
         body { 
-            margin: 0; 
-            overflow: hidden; 
-            background: var(--bg); 
-            color: white; 
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            user-select: none;
+            margin: 0; overflow: hidden; background: var(--bg); color: white; 
+            font-family: 'Segoe UI', Roboto, sans-serif; user-select: none;
+            touch-action: none;
         }
         
-        /* --- Starfield Background --- */
         #game-board { 
-            position: relative; 
-            width: 100vw; 
-            height: 100vh; 
-            display: none; 
-            background: radial-gradient(circle at bottom, #0a0a20 0%, #000 100%);
-            overflow: hidden;
+            position: relative; width: 100vw; height: 100vh; display: none; 
+            background: radial-gradient(circle at bottom, #0a0a20 0%, #000 100%); overflow: hidden;
         }
 
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: moveStars linear infinite;
-        }
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: moveStars linear infinite; }
         @keyframes moveStars { from { transform: translateY(-100vh); } to { transform: translateY(100vh); } }
 
-        /* --- Overlays & Horizontal Menus --- */
         .overlay { 
             position: absolute; top:0; left:0; width:100vw; height:100vh; 
             display:flex; flex-direction:column; align-items:center; justify-content:center; 
-            background: rgba(0,0,0,0.85); z-index: 100; backdrop-filter: blur(15px); 
-            text-align: center;
+            background: rgba(0,0,0,0.95); z-index: 100; backdrop-filter: blur(20px); text-align: center;
         }
         
-        #pause-menu, #game-over-menu { display: none; }
+        #main-menu, #pause-menu, #game-over-menu, #leaderboard-screen { display: none; }
 
-        h1 { 
-            font-size: clamp(2rem, 8vw, 4rem); letter-spacing: 8px; color: var(--blue); 
-            text-shadow: 0 0 20px var(--blue); margin-bottom: 30px;
-            font-weight: 900;
-        }
+        h1 { font-size: clamp(2rem, 8vw, 4rem); letter-spacing: 8px; color: var(--blue); text-shadow: 0 0 20px var(--blue); margin-bottom: 20px; font-weight: 900; }
+        h2 { color: var(--gold); letter-spacing: 4px; font-size: 1rem; margin-bottom: 30px; }
 
-        /* The "Straight Line" Button Container */
-        .menu-row { 
-            display: flex; 
-            flex-direction: row; 
-            justify-content: center; 
-            align-items: center;
-            gap: 15px; 
-            flex-wrap: wrap; 
-            max-width: 90vw;
-            margin-top: 20px;
-        }
+        .menu-row { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; max-width: 95vw; margin-top: 15px; }
 
         .btn { 
             background: var(--glass); border: 1px solid var(--blue); color: var(--blue); 
-            padding: 15px 20px; font-size: 0.9rem; cursor: pointer; 
-            width: 150px; text-transform: uppercase; font-weight: bold; 
-            transition: 0.3s; border-radius: 4px; letter-spacing: 1px;
-            backdrop-filter: blur(5px);
+            padding: 12px 8px; font-size: 0.8rem; cursor: pointer; width: 100px; 
+            text-transform: uppercase; font-weight: bold; transition: 0.3s; border-radius: 4px; 
         }
         .btn:hover:not(:disabled) { background: var(--blue); color: #000; box-shadow: 0 0 30px var(--blue); }
-        .btn:disabled { opacity: 0.2; cursor: wait; }
+        .btn:disabled { opacity: 0.3; cursor: wait; }
+        .btn.active-tab { background: var(--blue); color: #000; }
 
-        /* --- HUD & Pause --- */
-        #hud { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 80px;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 30px; box-sizing: border-box; z-index: 50;
+        input[type="text"] {
+            background: rgba(255,255,255,0.05); border: 2px solid var(--blue); color: white;
+            padding: 18px; font-size: 1.4rem; text-align: center; border-radius: 4px; width: 80vw; max-width: 350px; outline: none;
         }
 
-        .stat-box { font-size: 1.1rem; text-transform: uppercase; color: var(--blue); font-weight: bold; }
+        table { width: 90vw; max-width: 450px; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
+        th { color: var(--gold); border-bottom: 1px solid var(--gold); padding: 10px; text-transform: uppercase; }
+        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; box-sizing: border-box; z-index: 50; }
+        .stat-box { font-size: 0.8rem; text-transform: uppercase; color: var(--blue); font-weight: bold; }
         .stat-val { color: white; text-shadow: 0 0 10px var(--blue); margin-left: 5px; }
 
-        #pause-trigger {
-            background: var(--glass); border: 1px solid var(--blue); color: var(--blue);
-            padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;
-            transition: 0.2s;
+        #turret { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: var(--blue); clip-path: polygon(50% 0%, 20% 100%, 80% 100%); box-shadow: 0 0 20px var(--blue); }
+
+        .word { position: absolute; font-size: clamp(1.4rem, 5vw, 2.2rem); font-weight: 800; color: #fff; text-shadow: 2px 2px 4px #000; white-space: nowrap; display: flex; pointer-events: none; }
+        .letter { transition: all 0.1s; opacity: 1; }
+        .letter.active-target { color: var(--red); text-shadow: 0 0 15px var(--red); transform: scale(1.2); opacity: 1; }
+        .letter.typed { opacity: 0.3; }
+        
+        .missile { position: absolute; width: 3px; height: 35px; background: #fff; box-shadow: 0 0 15px #fff; border-radius: 10px; z-index: 5; transition: all 0.12s linear; }
+        #rival-bar { position: absolute; left: 0; top: 60px; height: 3px; background: var(--gold); box-shadow: 0 0 10px var(--gold); width: 0%; transition: width 0.5s; z-index: 50; }
+
+        #mobile-keyboard { display: none; position: absolute; bottom: 15px; left: 0; width: 100vw; flex-direction: column; gap: 6px; align-items: center; z-index: 60; }
+        .kb-row { display: flex; gap: 5px; justify-content: center; width: 100%; }
+        .kb-key { background: rgba(0, 212, 255, 0.1); border: 1px solid var(--blue); color: white; padding: 12px 0; width: 8.8vw; max-width: 45px; text-align: center; font-weight: bold; border-radius: 4px; font-size: 1.1rem; cursor: pointer; }
+        .kb-key:active { background: var(--blue); color: #000; }
+
+        @media (max-width: 768px) {
+            #mobile-keyboard { display: flex; }
+            #turret { bottom: 200px; }
+            .btn { width: 90px; padding: 10px 5px; font-size: 0.7rem; }
         }
-        #pause-trigger:hover { background: var(--blue); color: black; }
-
-        /* --- Gameplay Elements --- */
-        #turret { 
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
-            width: 50px; height: 50px; background: var(--blue); 
-            clip-path: polygon(50% 0%, 20% 100%, 80% 100%);
-            box-shadow: 0 0 30px var(--blue);
-        }
-
-        .word { position: absolute; font-size: 2.2rem; font-weight: 800; color: #fff; text-shadow: 2px 2px 4px #000; pointer-events: none; }
-        .letter.active-target { color: var(--red); text-shadow: 0 0 15px var(--red); transform: scale(1.1); display: inline-block; }
-        .letter.typed { opacity: 0.2; }
-
-        .missile { position: absolute; width: 3px; height: 35px; background: #fff; box-shadow: 0 0 15px #fff; border-radius: 10px; z-index: 5; transition: all 0.1s linear; }
     </style>
 </head>
 <body>
 
+    <div id="name-screen" class="overlay">
+        <h1>ACCESS DENIED</h1>
+        <h2>ENTER PILOT CALLSIGN</h2>
+        <input type="text" id="username-input" placeholder="NAME..." maxlength="10">
+        <button class="btn" style="margin-top:25px; width:280px" onclick="game.saveName()">INITIALIZE</button>
+    </div>
+
     <div id="main-menu" class="overlay">
-        <h1>ASTRO STRIKE</h1>
-        <div id="loading-status" style="color:var(--gold)">🛰️ ESTABLISHING SATELLITE LINK...</div>
-        <div class="menu-row" id="difficulty-row">
+        <h1 id="welcome-msg">ASTRO STRIKE</h1>
+        <div class="menu-row">
             <button class="btn" onclick="game.start('easy')" disabled>Easy</button>
             <button class="btn" onclick="game.start('normal')" disabled>Normal</button>
             <button class="btn" onclick="game.start('hard')" disabled>Hard</button>
             <button class="btn" onclick="game.start('expert')" disabled>Expert</button>
-            <button class="btn" onclick="game.start('master')" disabled>Master</button>
+            <button class="btn" style="border-color:var(--red); color:var(--red)" onclick="game.start('master')" disabled>Master</button>
+        </div>
+        <div class="menu-row">
+            <button class="btn" style="border-color:var(--gold); color:var(--gold)" onclick="game.showLeaderboard()">Rankings</button>
+            <button class="btn" onclick="game.changeName()">Log Out</button>
         </div>
     </div>
 
-    <div id="pause-menu" class="overlay">
-        <h1>PAUSED</h1>
-        <div class="menu-row">
-            <button class="btn" onclick="game.togglePause()">Resume</button>
-            <button class="btn" style="color:var(--red); border-color:var(--red)" onclick="game.quit()">Abort</button>
+    <div id="leaderboard-screen" class="overlay">
+        <h1 id="lb-title">RANKINGS</h1>
+        <div class="menu-row" id="lb-tabs" style="margin-bottom: 10px;">
+            <button class="btn" onclick="game.showLeaderboard('easy')">Easy</button>
+            <button class="btn" onclick="game.showLeaderboard('normal')">Normal</button>
+            <button class="btn" onclick="game.showLeaderboard('hard')">Hard</button>
+            <button class="btn" onclick="game.showLeaderboard('expert')">Expert</button>
+            <button class="btn" onclick="game.showLeaderboard('master')">Master</button>
         </div>
-    </div>
-
-    <div id="game-over-menu" class="overlay">
-        <h1 style="color:var(--red)">MISSION FAILED</h1>
-        <div id="final-stats" style="margin-bottom:20px; font-size: 1.5rem;"></div>
-        <div class="menu-row">
-            <button class="btn" id="retry-btn">Re-Launch</button>
-            <button class="btn" onclick="game.quit()">Menu</button>
-        </div>
+        <table id="leader-table">
+            <thead><tr><th>Rank</th><th>Pilot</th><th>Score</th></tr></thead>
+            <tbody id="leader-body"></tbody>
+        </table>
+        <button class="btn" style="width:200px" onclick="game.hideLeaderboard()">Back to Menu</button>
     </div>
 
     <div id="game-board">
         <div id="hud">
+            <div class="stat-box">ID: <span class="stat-val" id="hud-name">---</span></div>
             <div class="stat-box">Score: <span class="stat-val" id="score">0</span></div>
-            <div class="stat-box">Streak: <span class="stat-val" id="streak-display">0</span></div>
             <div class="stat-box">Hull: <span class="stat-val" id="lives">3</span></div>
-            <button id="pause-trigger" onclick="game.togglePause()">II PAUSE</button>
         </div>
+        <div id="rival-bar"></div>
         <div id="turret"></div>
+        <div id="mobile-keyboard"></div>
+    </div>
+
+    <div id="pause-menu" class="overlay">
+        <h1>PAUSED</h1>
+        <button class="btn" onclick="game.togglePause()">Resume</button>
+        <button class="btn" style="margin-top:10px; color:var(--red); border-color:var(--red)" onclick="game.quit()">Quit</button>
+    </div>
+
+    <div id="game-over-menu" class="overlay">
+        <h1 style="color:var(--red)">TERMINATED</h1>
+        <div id="final-stats" style="margin-bottom:20px; font-size:1.5rem"></div>
+        <button class="btn" onclick="game.quit()">Menu</button>
     </div>
 
     <script>
         const DICT_URL = "https://cdn.jsdelivr.net/gh/dwyl/english-words@master/words_alpha.txt";
 
         const game = {
-            active: false, paused: false, score: 0, lives: 3, streak: 0,
+            username: "", active: false, paused: false, score: 0, lives: 3,
             currentWord: null, difficulty: 'normal',
             megaDict: { easy: [], normal: [], hard: [], expert: [], master: [] },
-            speeds: { easy: 0.8, normal: 1.4, hard: 2.2, expert: 3.5, master: 5.0 },
-            starSpeed: { easy: "5s", normal: "3s", hard: "2s", expert: "1s", master: "0.5s" },
+            speeds: { easy: 0.7, normal: 1.1, hard: 1.8, expert: 2.8, master: 4.0 },
 
-            async init() {
-                // Create Background Stars
-                const board = document.getElementById('game-board');
-                for(let i=0; i<80; i++) {
-                    let star = document.createElement('div');
-                    star.className = 'star';
-                    star.style.width = Math.random() * 3 + 'px';
-                    star.style.height = star.style.width;
-                    star.style.left = Math.random() * 100 + 'vw';
-                    star.style.top = Math.random() * 100 + 'vh';
-                    star.style.animationDuration = "4s";
-                    board.appendChild(star);
-                }
-
-                try {
-                    const res = await fetch(DICT_URL);
-                    const text = await res.text();
-                    const words = text.split('\n');
-                    words.forEach(w => {
-                        const word = w.trim().toUpperCase();
-                        if (word.length >= 3 && word.length <= 4) this.megaDict.easy.push(word);
-                        else if (word.length >= 5 && word.length <= 6) this.megaDict.normal.push(word);
-                        else if (word.length >= 7 && word.length <= 9) this.megaDict.hard.push(word);
-                        else if (word.length >= 10 && word.length <= 12) this.megaDict.expert.push(word);
-                        else if (word.length >= 13) this.megaDict.master.push(word);
-                    });
-                    document.getElementById('loading-status').innerText = "✅ ALL SYSTEMS ONLINE";
-                    document.querySelectorAll('.btn').forEach(b => b.disabled = false);
-                } catch (e) {
-                    document.getElementById('loading-status').innerText = "⚠️ OFFLINE MODE";
-                    this.megaDict.easy = ["STAR", "CORE", "VOID", "SHIP"];
-                    document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+            audio: {
+                ctx: null,
+                init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+                play(f1, f2, d, v, type='square') {
+                    if(!this.ctx) return;
+                    const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                    o.type = type; o.connect(g); g.connect(this.ctx.destination);
+                    o.frequency.setValueAtTime(f1, this.ctx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(f2, this.ctx.currentTime + d);
+                    g.gain.setValueAtTime(v, this.ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + d);
+                    o.start(); o.stop(this.ctx.currentTime + d);
                 }
             },
 
-            start(diff) {
-                this.difficulty = diff; this.active = true; this.paused = false;
-                this.score = 0; this.lives = 3; this.streak = 0;
+            async init() {
+                this.buildKB();
+                for(let i=0; i<40; i++) {
+                    let s = document.createElement('div'); s.className = 'star';
+                    s.style.width = s.style.height = Math.random()*3+'px';
+                    s.style.left = Math.random()*100+'vw'; s.style.top = Math.random()*100+'vh';
+                    s.style.animationDuration = (Math.random()*3+2)+'s';
+                    document.getElementById('game-board').appendChild(s);
+                }
+                const saved = localStorage.getItem('astro_name');
+                if(saved) { this.username = saved; this.showMenu(); }
                 
-                // Set Star Speed based on difficulty
-                document.querySelectorAll('.star').forEach(s => s.style.animationDuration = this.starSpeed[diff]);
+                try {
+                    const r = await fetch(DICT_URL); const t = await r.text();
+                    t.split('\n').forEach(w => {
+                        const word = w.trim().toUpperCase();
+                        if(word.length >=3 && word.length <=4) this.megaDict.easy.push(word);
+                        else if(word.length >=5 && word.length <=6) this.megaDict.normal.push(word);
+                        else if(word.length >=7 && word.length <=9) this.megaDict.hard.push(word);
+                        else if(word.length >=10 && word.length <=12) this.megaDict.expert.push(word);
+                        else if(word.length >=13) this.megaDict.master.push(word);
+                    });
+                    document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+                } catch(e) { this.megaDict.easy = ["STAR","VOID","ASTRO"]; document.querySelectorAll('.btn').forEach(b => b.disabled = false); }
+            },
 
+            buildKB() {
+                const layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+                const kb = document.getElementById('mobile-keyboard');
+                layout.forEach(row => {
+                    const rDiv = document.createElement('div'); rDiv.className = 'kb-row';
+                    row.split('').forEach(k => {
+                        const b = document.createElement('div'); b.className = 'kb-key'; b.innerText = k;
+                        b.addEventListener('pointerdown', (e) => { e.preventDefault(); this.handleInput(k); });
+                        rDiv.appendChild(b);
+                    });
+                    kb.appendChild(rDiv);
+                });
+            },
+
+            saveName() {
+                const val = document.getElementById('username-input').value.trim().toUpperCase();
+                if(val) { this.username = val; localStorage.setItem('astro_name', val); this.showMenu(); }
+            },
+
+            showMenu() {
+                document.getElementById('name-screen').style.display = 'none';
+                document.getElementById('main-menu').style.display = 'flex';
+                document.getElementById('welcome-msg').innerText = `WELCOME, ${this.username}`;
+            },
+
+            changeName() { localStorage.removeItem('astro_name'); location.reload(); },
+
+            showLeaderboard(mode = 'normal') {
+                // Style the active tab
+                document.querySelectorAll('#lb-tabs .btn').forEach(btn => {
+                    btn.classList.remove('active-tab');
+                    if(btn.innerText.toLowerCase() === mode) btn.classList.add('active-tab');
+                });
+
+                document.getElementById('lb-title').innerText = `${mode.toUpperCase()} RANKINGS`;
+                const storageKey = `astro_leads_${mode}`;
+                const data = JSON.parse(localStorage.getItem(storageKey)) || [];
+                const body = document.getElementById('leader-body');
+                
+                body.innerHTML = data.length ? "" : `<tr><td colspan='3'>NO ${mode.toUpperCase()} DATA</td></tr>`;
+                data.forEach((entry, i) => {
+                    body.innerHTML += `<tr><td>#${i+1}</td><td>${entry.name}</td><td>${entry.score}</td></tr>`;
+                });
+                document.getElementById('leaderboard-screen').style.display = 'flex';
+                document.getElementById('main-menu').style.display = 'none';
+            },
+
+            hideLeaderboard() { 
+                document.getElementById('leaderboard-screen').style.display = 'none'; 
+                document.getElementById('main-menu').style.display = 'flex';
+            },
+
+            start(d) {
+                if(document.activeElement) document.activeElement.blur();
+                this.audio.init(); this.difficulty = d; this.active = true; this.paused = false;
+                this.score = 0; this.lives = 3;
                 document.getElementById('main-menu').style.display = 'none';
                 document.getElementById('game-over-menu').style.display = 'none';
                 document.getElementById('game-board').style.display = 'block';
+                document.getElementById('hud-name').innerText = this.username;
                 this.updateUI(); this.spawn(); this.loop();
             },
 
             spawn() {
-                if (!this.active) return;
-                if (this.currentWord) this.currentWord.el.remove();
-                const pool = this.megaDict[this.difficulty].length > 0 ? this.megaDict[this.difficulty] : this.megaDict.easy;
-                const text = pool[Math.floor(Math.random() * pool.length)];
-                const el = document.createElement('div');
-                el.className = 'word';
-                el.style.left = Math.random() * (window.innerWidth - 300) + 50 + "px";
-                el.style.top = "-100px";
-                const letters = text.split('').map((char, i) => {
-                    const span = document.createElement('span');
-                    span.innerText = char; span.className = 'letter';
-                    if (i === 0) span.classList.add('active-target');
-                    el.appendChild(span); return span;
+                if(!this.active) return;
+                if(this.currentWord) this.currentWord.el.remove();
+                const pool = this.megaDict[this.difficulty].length ? this.megaDict[this.difficulty] : this.megaDict.easy;
+                const text = pool[Math.floor(Math.random()*pool.length)];
+                const el = document.createElement('div'); el.className = 'word';
+                const charW = window.innerWidth < 768 ? 16 : 22;
+                const maxL = window.innerWidth - (text.length * charW) - 40;
+                el.style.left = Math.max(20, Math.random()*maxL)+'px'; el.style.top = '-50px';
+                const letters = text.split('').map((c, i) => {
+                    const s = document.createElement('span'); s.innerText = c; s.className = 'letter';
+                    if(i===0) s.classList.add('active-target'); 
+                    el.appendChild(s); return s;
                 });
                 document.getElementById('game-board').appendChild(el);
-                this.currentWord = { el, text, letters, y: -100, index: 0 };
+                this.currentWord = { el, text, letters, y: -50, index: 0 };
             },
 
             loop() {
-                if (!this.active || this.paused) return;
-                if (this.currentWord) {
+                if(!this.active || this.paused) return;
+                if(this.currentWord) {
                     this.currentWord.y += this.speeds[this.difficulty];
-                    this.currentWord.el.style.top = this.currentWord.y + "px";
-                    if (this.currentWord.y > window.innerHeight - 110) {
-                        this.lives--; this.streak = 0; this.updateUI();
-                        if (this.lives <= 0) this.gameOver(); else this.spawn();
+                    this.currentWord.el.style.top = this.currentWord.y + 'px';
+                    const limit = window.innerWidth < 768 ? window.innerHeight - 250 : window.innerHeight - 100;
+                    if(this.currentWord.y > limit) {
+                        this.lives--; this.audio.play(100, 50, 0.2, 0.1, 'sawtooth'); this.updateUI();
+                        if(this.lives <= 0) this.gameOver(); else this.spawn();
                     }
                 }
                 requestAnimationFrame(() => this.loop());
             },
 
             handleInput(key) {
-                if (!this.active || this.paused || !this.currentWord) return;
-                if (key === this.currentWord.text[this.currentWord.index]) {
-                    this.fireMissile(this.currentWord.letters[this.currentWord.index]);
-                    this.currentWord.index++;
-                    if (this.currentWord.index < this.currentWord.text.length) {
-                        this.currentWord.letters[this.currentWord.index].classList.add('active-target');
+                if(!this.active || this.paused || !this.currentWord) return;
+                const w = this.currentWord;
+                if(key === w.text[w.index]) {
+                    this.fire(w.letters[w.index]);
+                    w.letters[w.index].classList.remove('active-target');
+                    w.letters[w.index].classList.add('typed');
+                    w.index++;
+                    if(w.index < w.text.length) {
+                        w.letters[w.index].classList.add('active-target');
                     } else {
-                        this.score += (this.currentWord.text.length * 10) + (this.streak * 5);
-                        this.streak++; this.updateUI(); this.spawn();
+                        this.score += (w.text.length * 10);
+                        this.audio.play(150, 10, 0.4, 0.1, 'sawtooth');
+                        this.updateUI(); this.spawn();
                     }
-                } else { this.streak = 0; this.updateUI(); }
+                } else { this.audio.play(60, 40, 0.1, 0.05, 'triangle'); }
             },
 
-            fireMissile(target) {
-                const m = document.createElement('div');
-                m.className = 'missile';
-                const rect = target.getBoundingClientRect();
-                m.style.left = "50vw"; m.style.bottom = "80px";
+            fire(target) {
+                this.audio.play(800, 200, 0.1, 0.03);
+                const m = document.createElement('div'); m.className = 'missile';
+                const r = target.getBoundingClientRect();
+                m.style.left = "50vw"; m.style.bottom = window.innerWidth < 768 ? "210px" : "40px";
                 document.getElementById('game-board').appendChild(m);
-                setTimeout(() => { 
-                    m.style.left = (rect.left + rect.width/2) + "px"; 
-                    m.style.top = (rect.top + rect.height/2) + "px"; 
-                }, 10);
-                setTimeout(() => { target.classList.add('typed'); m.remove(); }, 120);
+                setTimeout(() => { m.style.left = (r.left + r.width/2)+'px'; m.style.top = (r.top + r.height/2)+'px'; }, 10);
+                setTimeout(() => m.remove(), 120);
             },
 
             updateUI() {
                 document.getElementById('score').innerText = this.score;
                 document.getElementById('lives').innerText = this.lives;
-                document.getElementById('streak-display').innerText = this.streak;
-            },
-
-            togglePause() {
-                this.paused = !this.paused;
-                document.getElementById('pause-menu').style.display = this.paused ? 'flex' : 'none';
-                if (!this.paused) this.loop();
+                document.getElementById('rival-bar').style.width = Math.min(100, (this.score/3000)*100) + "%";
             },
 
             gameOver() {
-                this.active = false;
-                document.getElementById('final-stats').innerHTML = `SCORE: ${this.score}<br>MAX STREAK: ${this.streak}`;
+                this.active = false; this.saveLead();
+                document.getElementById('final-stats').innerText = `FINAL SCORE (${this.difficulty}): ${this.score}`;
                 document.getElementById('game-over-menu').style.display = 'flex';
-                document.getElementById('retry-btn').onclick = () => this.start(this.difficulty);
             },
 
-            quit() {
-                this.active = false; if (this.currentWord) this.currentWord.el.remove();
-                this.currentWord = null;
-                document.getElementById('game-board').style.display = 'none';
-                document.getElementById('pause-menu').style.display = 'none';
-                document.getElementById('game-over-menu').style.display = 'none';
-                document.getElementById('main-menu').style.display = 'flex';
-            }
+            saveLead() {
+                const storageKey = `astro_leads_${this.difficulty}`;
+                let d = JSON.parse(localStorage.getItem(storageKey)) || [];
+                d.push({name: this.username, score: this.score});
+                d.sort((a,b) => b.score - a.score);
+                localStorage.setItem(storageKey, JSON.stringify(d.slice(0, 5)));
+            },
+
+            togglePause() { 
+                this.paused = !this.paused; 
+                document.getElementById('pause-menu').style.display = this.paused ? 'flex' : 'none';
+                if(!this.paused) this.loop();
+            },
+
+            quit() { location.reload(); }
         };
 
         window.addEventListener('keydown', (e) => {
-            if (e.key === "Escape") game.togglePause();
-            else game.handleInput(e.key.toUpperCase());
+            if(document.activeElement.id === 'username-input') { if(e.key === 'Enter') game.saveName(); return; }
+            if(e.repeat || e.ctrlKey || e.altKey) return;
+            if(e.key === "Escape") game.togglePause();
+            if(game.active && !game.paused && /^[a-zA-Z]$/.test(e.key)) game.handleInput(e.key.toUpperCase());
         });
 
         game.init();
