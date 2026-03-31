@@ -149,7 +149,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        // Ensure 'get' is included in your imports
+        import { getDatabase, ref, set, onValue, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBDT8oRqeSCLuihugU50vFJKJhbAAaqVIY",
@@ -366,11 +367,26 @@
                 document.getElementById('game-over-menu').style.display = 'flex';
             },
 
-            saveLead() {
-                if (this.score > 0) {
-                    const scoreRef = ref(db, 'leaderboard/' + this.difficulty);
-                    const newScoreRef = push(scoreRef);
-                    set(newScoreRef, { name: this.username, score: this.score, timestamp: Date.now() });
+            async saveLead() {
+                if (this.score <= 0) return;
+
+                // Uses the player's name as the specific database key
+                const userScoreRef = ref(db, `leaderboard/${this.difficulty}/${this.username}`);
+                
+                try {
+                    const snapshot = await get(userScoreRef);
+                    const currentRecord = snapshot.val();
+
+                    // Only overwrite if it's a new record
+                    if (!currentRecord || this.score > currentRecord.score) {
+                        await set(userScoreRef, { 
+                            name: this.username, 
+                            score: this.score, 
+                            timestamp: Date.now() 
+                        });
+                    }
+                } catch (e) {
+                    console.error("Leaderboard Sync Error:", e);
                 }
             },
 
